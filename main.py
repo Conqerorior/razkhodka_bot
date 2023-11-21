@@ -39,3 +39,4 @@ res = answer.find(
 )
 today = datetime.date.today().strftime("%d.%m.%Y" + 'г.')
 print(today, res.text.strip(), sep='\n')
+print('test')
