@@ -1,23 +1,37 @@
-import requests
+from requests import Session
 from bs4 import BeautifulSoup
-#
-# url = 'https://publicbg.mjs.bg/BgInfo/'
-#
-# req = requests.get(url)
-# src = req.text
-#
-#
-# with open('index.html', 'w') as file:
-#     file.write(src)
-with open('index.html') as file:
-    src = file.read()
 
-soup = BeautifulSoup(src, 'html.parser')
+work = Session()
 
-forms = soup.find_all(class_='control-label')
-print(forms)
+headers = {
+    'User-Agent': 'Mozilla/5.0'
+                  '(Windows NT 6.1)'
+                  'AppleWebKit/537.36'
+                  '(KHTML, like Gecko) '
+                  'Chrome/29.0.1547.0 Safari/537.36'}
 
-# for form in forms:
-#     number = form.text
-#     pin = form.text
-#     print(f'{number}  {pin}')
+response = work.get(
+    url='https://publicbg.mjs.bg/BgInfo/',
+    headers=headers)
+
+soup = BeautifulSoup(response.text, 'lxml')
+
+token = soup.find('form').find('input').get('value')
+
+data = {
+    '__RequestVerificationToken': token,
+    'reqNum': '1352/2023',
+    'pin': '081209'
+}
+
+result = work.post(
+    url='https://publicbg.mjs.bg/BgInfo/Home/Enroll',
+    headers=headers,
+    data=data)
+answer = BeautifulSoup(result.text, 'lxml')
+
+res = answer.find(
+    name='div',
+    class_='validation-summary-errors text-danger'
+)
+print(res.text)
