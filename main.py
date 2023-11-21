@@ -1,5 +1,8 @@
-from requests import Session
+import datetime
+
 from bs4 import BeautifulSoup
+from requests import Session
+
 
 work = Session()
 
@@ -34,4 +37,5 @@ res = answer.find(
     name='div',
     class_='validation-summary-errors text-danger'
 )
-print(res.text)
+today = datetime.date.today().strftime("%d.%m.%Y" + 'г.')
+print(today, res.text.strip(), sep='\n')

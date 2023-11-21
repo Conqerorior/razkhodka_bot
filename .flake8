@@ -1,0 +1,7 @@
+[flake8]
+disable-noqa = True
+ignore = W503
+filename =
+    ./main.py
+max-complexity = 10
+max-line-length = 79
