@@ -1,6 +1,8 @@
 import os
+import logging
 
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 from keyboards import keyboards_client
 
@@ -12,9 +14,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+storage = MemoryStorage()
+
 bot = Bot(os.getenv('BOT_TOKEN'))
 
-dp = Dispatcher(bot)
+dp = Dispatcher(bot, storage=storage)
 
 
 class AddUsers(StatesGroup):
@@ -23,7 +27,7 @@ class AddUsers(StatesGroup):
 
 
 async def on_startup(_):
-    print('Бот начал свою работу')
+    logging.warning('Бот начал свою работу')
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -49,6 +53,7 @@ async def process_add_number(message: types.Message, state: FSMContext):
     await AddUsers.next()
     await message.answer('ПИН-код вводится в документ, который вы получили'
                          ' при подаче заявления на стойке в Дирекции.')
+    await AddUsers.pin_number.set()
 
 
 @dp.message_handler(state=AddUsers.pin_number)
@@ -57,9 +62,11 @@ async def process_add_pin(message: types.Message, state: FSMContext):
         data['pin'] = message.text
 
     async with state.proxy() as data:
+        user_id = message.from_user.id
+        user_name = message.from_user.username
         login = data['reqNum']
         password = data['pin']
-        await message.answer(f"Логин: {login}\nПароль: {password}")
+        await message.answer(f"Логин: {login}\nПароль: {password}\nЮзерайди:{user_id}\nЮзернейм:{user_name}")
 
     await state.finish()
 
