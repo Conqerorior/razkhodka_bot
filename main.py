@@ -1,6 +1,7 @@
 import os
 import logging
 
+from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
@@ -42,14 +43,27 @@ async def process_help_command(message: types.Message):
 async def process_add_command(message: types.Message):
     await AddUsers.record_number.set()
     await message.answer('Введите номер входящей заявки указывается '
-                         'в формате «номер/год». Пример: «123/2016».')
+                         'в формате «номер/год». Пример: «123/2016».\n'
+                         '\nДля отмены введите /cancel')
 
 
-@dp.message_handler(state=AddUsers.record_number)
-async def process_invalid_number(message: types.Message) -> bool:
-    text = message.text.strip()
+@dp.message_handler(commands='/cancel', state='*')
+#@dp.message_handler(Text(equals='/cancel', ignore_case=True), state='*')
+async def process_cancel(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    print(f'cancel {message.text}')
+    if current_state is None:
+        return
+    await state.finish()
+    await message.reply('ОК')
+
+
+@dp.message_handler(lambda message: '/' not in message.text or not all(
+    part.isdigit() for part in message.text.split('/')),
+                    state=AddUsers.record_number)
+async def process_invalid_number(message: types.Message):
+    print(f'sada{message.text}')
     await message.reply('Пример: «123/2016»')
-    return '/' in text and all(part.isdigit() for part in text.split('/'))
 
 
 @dp.message_handler(state=AddUsers.record_number)
@@ -59,7 +73,8 @@ async def process_add_number(message: types.Message, state: FSMContext):
 
     await AddUsers.next()
     await message.answer('ПИН-код вводится в документ, который вы получили'
-                         ' при подаче заявления на стойке в Дирекции.')
+                         ' при подаче заявления на стойке в Дирекции.\n'
+                         '\nДля отмены введите /cancel')
     await AddUsers.pin_number.set()
 
 
