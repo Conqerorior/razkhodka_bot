@@ -46,6 +46,13 @@ async def process_add_command(message: types.Message):
 
 
 @dp.message_handler(state=AddUsers.record_number)
+async def process_invalid_number(message: types.Message) -> bool:
+    text = message.text.strip()
+    await message.reply('Пример: «123/2016»')
+    return '/' in text and all(part.isdigit() for part in text.split('/'))
+
+
+@dp.message_handler(state=AddUsers.record_number)
 async def process_add_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['reqNum'] = message.text
@@ -56,6 +63,12 @@ async def process_add_number(message: types.Message, state: FSMContext):
     await AddUsers.pin_number.set()
 
 
+@dp.message_handler(lambda message: not message.text.isdigit(),
+                    state=AddUsers.pin_number)
+async def process_invalid_pin(message: types.Message):
+    await message.answer('Введите только цифры')
+
+
 @dp.message_handler(state=AddUsers.pin_number)
 async def process_add_pin(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
@@ -64,9 +77,10 @@ async def process_add_pin(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         user_id = message.from_user.id
         user_name = message.from_user.username
-        login = data['reqNum']
-        password = data['pin']
-        await message.answer(f"Логин: {login}\nПароль: {password}\nЮзерайди:{user_id}\nЮзернейм:{user_name}")
+        reg_num = data['reqNum']
+        reg_pin = data['pin']
+        await message.answer(
+            f"Логин: {reg_num}\nПароль: {reg_pin}\nЮзерайди:{user_id}\nЮзернейм:{user_name}")
 
     await state.finish()
 
