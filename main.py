@@ -1,7 +1,8 @@
 import os
 import logging
 
-from aiogram.dispatcher.filters import Text
+from MongoData import start_mongodb, create_user, get_user
+
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
@@ -29,6 +30,7 @@ class AddUsers(StatesGroup):
 
 async def on_startup(_):
     logging.warning('Бот начал свою работу')
+    await start_mongodb()
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -41,17 +43,28 @@ async def process_help_command(message: types.Message):
 
 @dp.message_handler(commands=['add'], state=None)
 async def process_add_command(message: types.Message):
+    instance = await get_user(message.from_user)
+    if instance:
+        await message.answer('Ваши данные уже внесены')
+        return
+
     await AddUsers.record_number.set()
     await message.answer('Введите номер входящей заявки указывается '
                          'в формате «номер/год». Пример: «123/2016».\n'
                          '\nДля отмены введите /cancel')
 
 
-@dp.message_handler(commands='/cancel', state='*')
-#@dp.message_handler(Text(equals='/cancel', ignore_case=True), state='*')
+@dp.message_handler(state='*')
+async def process_check(message: types.Message, state: FSMContext):
+    instance = await get_user(message.from_user)
+    if instance:
+        await message.answer('Ваши данные уже внесены')
+        await state.finish()
+
+
+@dp.message_handler(commands=['cancel'], state='*')
 async def process_cancel(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
-    print(f'cancel {message.text}')
     if current_state is None:
         return
     await state.finish()
@@ -62,7 +75,6 @@ async def process_cancel(message: types.Message, state: FSMContext):
     part.isdigit() for part in message.text.split('/')),
                     state=AddUsers.record_number)
 async def process_invalid_number(message: types.Message):
-    print(f'sada{message.text}')
     await message.reply('Пример: «123/2016»')
 
 
@@ -89,13 +101,8 @@ async def process_add_pin(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['pin'] = message.text
 
-    async with state.proxy() as data:
-        user_id = message.from_user.id
-        user_name = message.from_user.username
-        reg_num = data['reqNum']
-        reg_pin = data['pin']
-        await message.answer(
-            f"Логин: {reg_num}\nПароль: {reg_pin}\nЮзерайди:{user_id}\nЮзернейм:{user_name}")
+    await create_user(state, message.from_user)
+    await message.answer('Данные получены')
 
     await state.finish()
 
@@ -112,7 +119,7 @@ async def process_check_command(message: types.Message):
 async def process_show_command(message: types.Message):
     await bot.send_message(
         message.from_user.id,
-        'Показать данные пользвователя',
+        'Показать данные пользователя',
         reply_markup=keyboards_client)
 
 
