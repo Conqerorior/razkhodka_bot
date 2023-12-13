@@ -14,6 +14,7 @@ from MongoData import (create_user,
                        start_mongodb,
                        show_user,
                        delete_user)
+from parser_status import get_data_parser
 
 load_dotenv()
 
@@ -102,10 +103,15 @@ async def process_add_pin(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands=['check'])
 async def process_check_command(message: types.Message):
-    await bot.send_message(
-        message.from_user.id,
-        'Узнать статус проверки',
-        reply_markup=keyboards_client)
+    user = await get_user(message.from_user)
+
+    data = await get_data_parser(req_num=user['reqNum'], pin=user['pin'])
+    await bot.send_message(message.from_user.id,
+                           text=f'🇧🇬Добрый день, *{user["username"]}*\\!\n'
+                                f'Статус заявки под номером: {user["reqNum"]}'
+                                f'\n\n`{data["answer"].upper()}`\n\n'
+                                f'{data["date_answer"]}📅',
+                           parse_mode="MarkdownV2")
 
 
 @dp.message_handler(commands=['show'])
