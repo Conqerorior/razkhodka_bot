@@ -71,7 +71,6 @@ async def process_invalid_number(message: types.Message):
 @dp.message_handler(state=AddUsers.record_number)
 async def process_add_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        print(data)
         data['reqNum'] = message.text
 
     await AddUsers.next()
@@ -90,7 +89,6 @@ async def process_invalid_pin(message: types.Message):
 @dp.message_handler(state=AddUsers.pin_number)
 async def process_add_pin(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        print(data)
         data['pin'] = message.text
 
     await create_user(state, message.from_user)
@@ -110,7 +108,18 @@ async def process_check_command(message: types.Message):
 @dp.message_handler(commands=['show'])
 async def process_show_command(message: types.Message):
     user_data = await show_user(user=message.from_user)
-    await bot.send_message(message.from_user.id, user_data)
+    if user_data:
+        user = user_data[0]
+        await bot.send_message(message.from_user.id,
+                               text=f'Ваш ID: {user["user_id"]}\n'
+                                    f'Username: {user["username"]}\n'
+                                    f'Номер Заявления: {user["reqNum"]}\n'
+                                    f'Пин-Код: {user["pin"]}\n'
+                               )
+
+        return
+    await bot.send_message(message.from_user.id,
+                           text='Для получения данных нужно зарегистрироваться')
 
 
 @dp.message_handler(commands=['delete'])
