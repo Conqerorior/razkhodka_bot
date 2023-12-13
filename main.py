@@ -9,8 +9,11 @@ from aiogram.utils import executor
 from dotenv import load_dotenv
 
 from keyboards import keyboards_client
-from MongoData import create_user, get_user, start_mongodb, show_user, \
-    delete_user
+from MongoData import (create_user,
+                       get_user,
+                       start_mongodb,
+                       show_user,
+                       delete_user)
 
 load_dotenv()
 
@@ -114,7 +117,7 @@ async def process_show_command(message: types.Message):
                                text=f'Ваш ID: {user["user_id"]}\n'
                                     f'Username: {user["username"]}\n'
                                     f'Номер Заявления: {user["reqNum"]}\n'
-                                    f'Пин-Код: {user["pin"]}\n'
+                                    f'Пин-Код: {user["pin"]}'
                                )
 
         return

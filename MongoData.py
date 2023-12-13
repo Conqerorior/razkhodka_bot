@@ -12,12 +12,11 @@ async def start_mongodb():
 
 async def create_user(state, user):
     async with state.proxy() as data:
-        data_value = list(data)
         load_data = {
             "user_id": user.id,
             "username": user.username,
-            "reqNum": data_value[0],
-            "pin": data_value[1]
+            "reqNum": data['reqNum'],
+            "pin": data['pin']
         }
 
     await collection.insert_one(load_data)
@@ -32,10 +31,11 @@ async def show_user(user):
     user_data = []
     async for document in cursor:
         user_data.append(document)
-    print(user_data)
+
     return user_data
 
 
 async def delete_user(user):
     result = await collection.delete_one({'user_id': user.id})
+
     return result
