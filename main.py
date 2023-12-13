@@ -104,6 +104,11 @@ async def process_add_pin(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['check'])
 async def process_check_command(message: types.Message):
     user = await get_user(message.from_user)
+    if not user:
+        await bot.send_message(message.from_user.id,
+                               text='Для получения данных '
+                                    'пожалуйста введите данные')
+        return
 
     data = await get_data_parser(req_num=user['reqNum'], pin=user['pin'])
     await bot.send_message(message.from_user.id,
