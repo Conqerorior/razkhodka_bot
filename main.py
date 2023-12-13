@@ -1,18 +1,16 @@
-import os
 import logging
-
-from MongoData import start_mongodb, create_user, get_user
-
-from aiogram.dispatcher.filters.state import State, StatesGroup
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-
-from keyboards import keyboards_client
+import os
 
 from aiogram import Bot, types
+from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher, FSMContext
+from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-
 from dotenv import load_dotenv
+
+from keyboards import keyboards_client
+from MongoData import create_user, get_user, start_mongodb, show_user, \
+    delete_user
 
 load_dotenv()
 
@@ -54,14 +52,6 @@ async def process_add_command(message: types.Message):
                          '\nДля отмены введите /cancel')
 
 
-@dp.message_handler(state='*')
-async def process_check(message: types.Message, state: FSMContext):
-    instance = await get_user(message.from_user)
-    if instance:
-        await message.answer('Ваши данные уже внесены')
-        await state.finish()
-
-
 @dp.message_handler(commands=['cancel'], state='*')
 async def process_cancel(message: types.Message, state: FSMContext):
     current_state = await state.get_state()
@@ -81,6 +71,7 @@ async def process_invalid_number(message: types.Message):
 @dp.message_handler(state=AddUsers.record_number)
 async def process_add_number(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
+        print(data)
         data['reqNum'] = message.text
 
     await AddUsers.next()
@@ -99,6 +90,7 @@ async def process_invalid_pin(message: types.Message):
 @dp.message_handler(state=AddUsers.pin_number)
 async def process_add_pin(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
+        print(data)
         data['pin'] = message.text
 
     await create_user(state, message.from_user)
@@ -117,18 +109,23 @@ async def process_check_command(message: types.Message):
 
 @dp.message_handler(commands=['show'])
 async def process_show_command(message: types.Message):
-    await bot.send_message(
-        message.from_user.id,
-        'Показать данные пользователя',
-        reply_markup=keyboards_client)
+    user_data = await show_user(user=message.from_user)
+    await bot.send_message(message.from_user.id, user_data)
 
 
 @dp.message_handler(commands=['delete'])
 async def process_delete_command(message: types.Message):
-    await bot.send_message(
-        message.from_user.id,
-        'Удалить данные из БД',
-        reply_markup=keyboards_client)
+    user = message.from_user
+    user_data = await delete_user(user=user)
+    if user_data.deleted_count == 1:
+        await bot.send_message(message.from_user.id,
+                               text=f'Пользователь '
+                                    f'{user.username} успешно удален')
+
+        return
+    await bot.send_message(message.from_user.id,
+                           text=f'Пользователь '
+                                f'{user.username} не найден')
 
 
 @dp.message_handler()
