@@ -26,6 +26,12 @@ async def get_user(user):
     return await collection.find_one({"user_id": user.id})
 
 
+async def get_all_users():
+    cursor = collection.find()
+    all_users = await cursor.to_list(length=None)
+    return all_users
+
+
 async def show_user(user):
     cursor = collection.find({"user_id": user.id})
     user_data = []

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 
@@ -10,11 +11,15 @@ from dotenv import load_dotenv
 
 from keyboards import keyboards_client
 from MongoData import (create_user,
+                       get_all_users,
                        get_user,
                        start_mongodb,
                        show_user,
                        delete_user)
+
 from parser_status import get_data_parser
+
+import aioschedule
 
 load_dotenv()
 
@@ -33,6 +38,35 @@ class AddUsers(StatesGroup):
 async def on_startup(_):
     logging.warning('Бот начал свою работу')
     await start_mongodb()
+    logging.warning('Запуск Планировщика')
+    await asyncio.create_task(scheduler())
+
+
+async def scheduler_auto_status():
+    users = await get_all_users()
+    if users:
+        for user in users:
+            data = await get_data_parser(
+                req_num=user['reqNum'], pin=user['pin'])
+
+            await bot.send_message(user['user_id'],
+                                   text=f'🇧🇬Добрый день, '
+                                        f'*{user["username"]}*\\!\n'
+                                        f'Статус заявки '
+                                        f'под номером: {user["reqNum"]}'
+                                        f'\n\n`{data["answer"].upper()}`\n\n'
+                                        f'{data["date_answer"]}📅',
+                                   parse_mode="MarkdownV2")
+
+        return
+    logging.warning('В Базе Данных нет пользователей')
+
+
+async def scheduler():
+    aioschedule.every(1).days.at('12:00').do(scheduler_auto_status)
+    while True:
+        await aioschedule.run_pending()
+        await asyncio.sleep(1)
 
 
 @dp.message_handler(commands=['start', 'help'])
