@@ -1,8 +1,9 @@
 import logging
+import os
 
 import motor.motor_asyncio
 
-client = motor.motor_asyncio.AsyncIOMotorClient('mongodb://localhost:27017/')
+client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv('MONGODB'))
 collection = client.razkhodka_db.razkhodka_users
 
 
