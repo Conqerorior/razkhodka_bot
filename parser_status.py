@@ -4,7 +4,18 @@ import httpx
 from bs4 import BeautifulSoup
 
 
-async def get_data_parser(req_num, pin):
+async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
+    """
+    Асинхронная функция для получения статуса заявления из официального сайта.
+
+    Вход:
+        req_num: Входящий номер заявки
+        pin: ПИН-код
+
+    Выход:
+        data_answer: Словарь с ответом статуса заявления
+    """
+
     async with httpx.AsyncClient() as client:
         headers = {
             'Accept': 'text/html',
@@ -34,11 +45,12 @@ async def get_data_parser(req_num, pin):
         answer = BeautifulSoup(result.text, 'lxml')
         parser_answer = answer.find(
             name='div', class_='validation-summary-errors text-danger')
-        today = datetime.datetime.today().strftime('%d\\.%m\\.%Y' + 'г\\.')
+        today = datetime.datetime.today().strftime(
+            '%H:%M%n%d\\.%m\\.%Y' + 'г\\.')
 
         data_answer = {
             'answer': parser_answer.text.strip(),
-            'date_answer': today
+            'time_answer': today
         }
 
         return data_answer

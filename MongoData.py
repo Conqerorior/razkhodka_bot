@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import motor.motor_asyncio
 from pymongo.results import DeleteResult
@@ -26,19 +26,19 @@ async def create_user(state: Any, user: Any) -> None:
     await collection.insert_one(load_data)
 
 
-async def get_user(user: Any) -> Dict:
+async def get_user(user: Any) -> dict:
     """Получает данные о пользователе из базы данных."""
     return await collection.find_one({"user_id": user.id})
 
 
-async def get_all_users() -> List[Dict[str, Any]]:
+async def get_all_users() -> list[dict[str, Any]]:
     """Получает список всех пользователей из базы данных."""
     cursor = collection.find()
     all_users = await cursor.to_list(length=None)
     return all_users
 
 
-async def show_user(user: Any) -> Optional[List[Dict[str, Any]]]:
+async def show_user(user: Any) -> Optional[list[dict[str, Any]]]:
     """Возвращает список информации о пользователе из базы данных."""
     cursor = collection.find({"user_id": user.id})
     user_data = []

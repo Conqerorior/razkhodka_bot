@@ -33,9 +33,8 @@ class AddUsers(StatesGroup):
 async def on_startup(_: Any) -> None:
     """
     Запуск бота.
-    Schedule_task запускает функцию scheduler
-    функция scheduler будет продолжать выполняться в
-    отдельном событийном цикле, пока не будет завершена.
+    Инициализирует подключение к базе данных MongoDB,
+    и запускает планировщик задач.
     """
     logging.warning('Бот начал свою работу')
     await start_mongodb()
@@ -44,6 +43,13 @@ async def on_startup(_: Any) -> None:
 
 
 async def scheduler_auto_status():
+    """
+    Обрабатывает запросы на получение статуса заявок.
+
+    Получает список всех пользователей из базы данных,
+    и для каждого пользователя отправляет ему сообщение
+    с текущим статусом заявки.
+    """
     users = await get_all_users()
     if users:
         for user in users:
@@ -56,7 +62,7 @@ async def scheduler_auto_status():
                                         f'Статус заявки '
                                         f'под номером: {user["reqNum"]}'
                                         f'\n\n`{data["answer"].upper()}`\n\n'
-                                        f'{data["date_answer"]}📅',
+                                        f'{data["time_answer"]}📅',
                                    parse_mode="MarkdownV2")
 
         return
@@ -64,6 +70,12 @@ async def scheduler_auto_status():
 
 
 async def scheduler():
+    """
+    Планировщик задач.
+
+    Запускает функцию scheduler_auto_status
+    ежедневно в 12:00.
+    """
     aioschedule.every(1).days.at('12:00').do(scheduler_auto_status)
     while True:
         await aioschedule.run_pending()
@@ -81,6 +93,15 @@ async def process_help_command(message: types.Message):
 
 @dp.message_handler(commands=['add'], state=None)
 async def process_add_command(message: types.Message):
+    """
+    Обработка команды /add.
+
+    Проверяет, есть ли данные пользователя в базе данных,
+    и если нет, то запускает машинное состояние (FSMContext)
+    а так же, диалог добавления новой записи.
+
+    :param message: Сообщение от пользователя.
+    """
     instance = await get_user(message.from_user)
     if instance:
         await message.answer('Ваши данные уже внесены')
@@ -94,6 +115,15 @@ async def process_add_command(message: types.Message):
 
 @dp.message_handler(commands=['cancel'], state='*')
 async def process_cancel(message: types.Message, state: FSMContext):
+    """
+    Обработка команды /cancel.
+
+    В любом состоянии диалога.
+    Завершает диалог и отправляет подтверждение.
+
+    :param message: Сообщение от пользователя.
+    :param state: Состояние диалога.
+    """
     current_state = await state.get_state()
     if current_state is None:
         return
@@ -105,11 +135,24 @@ async def process_cancel(message: types.Message, state: FSMContext):
     part.isdigit() for part in message.text.split('/')),
                     state=AddUsers.record_number)
 async def process_invalid_number(message: types.Message):
+    """
+    Обработка некорректно введенного номера заявки.
+    Отправляет сообщение с примером правильного формата.
+
+    :param message: Сообщение от пользователя.
+    """
     await message.reply('Пример: «123/2016»')
 
 
 @dp.message_handler(state=AddUsers.record_number)
 async def process_add_number(message: types.Message, state: FSMContext):
+    """
+    Обработка введенного номера заявки.
+    Сохраняет номер в данных диалога и переходит к следующему шагу.
+
+    :param message: Сообщение от пользователя.
+    :param state: Текущее состояние диалога.
+    """
     async with state.proxy() as data:
         data['reqNum'] = message.text
 
@@ -123,11 +166,25 @@ async def process_add_number(message: types.Message, state: FSMContext):
 @dp.message_handler(lambda message: not message.text.isdigit(),
                     state=AddUsers.pin_number)
 async def process_invalid_pin(message: types.Message):
+    """
+    Обработка некорректно введенного ПИН-кода.
+    Отправляет сообщение о необходимости ввести только цифры.
+
+    :param message: Сообщение от пользователя.
+    """
     await message.answer('Введите только цифры')
 
 
 @dp.message_handler(state=AddUsers.pin_number)
 async def process_add_pin(message: types.Message, state: FSMContext):
+    """
+    Обработка введенного ПИН-кода.
+    Создает нового пользователя в базе данных, отправляет подтверждение
+    и завершает диалог.
+
+    :param message: Сообщение от пользователя.
+    :param state: Текущее состояние диалога.
+    """
     async with state.proxy() as data:
         data['pin'] = message.text
 
@@ -139,6 +196,13 @@ async def process_add_pin(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands=['check'])
 async def process_check_command(message: types.Message):
+    """
+    Обработка команды /check.
+    Проверяет наличие данных пользователя в базе данных,
+    и если они есть, то отправляет ему текущий статус заявки.
+
+    :param message: Сообщение от пользователя.
+    """
     user = await get_user(message.from_user)
     if not user:
         await bot.send_message(message.from_user.id,
@@ -151,12 +215,19 @@ async def process_check_command(message: types.Message):
                            text=f'🇧🇬Добрый день, *{user["username"]}*\\!\n'
                                 f'Статус заявки под номером: {user["reqNum"]}'
                                 f'\n\n`{data["answer"].upper()}`\n\n'
-                                f'{data["date_answer"]}📅',
+                                f'{data["time_answer"]}',
                            parse_mode="MarkdownV2")
 
 
 @dp.message_handler(commands=['show'])
 async def process_show_command(message: types.Message):
+    """
+    Обработка команды /show.
+    Проверяет наличие данных пользователя в базе данных
+    и выводит их в случае успешного поиска.
+
+    :param message: Сообщение от пользователя.
+    """
     user_data = await show_user(user=message.from_user)
     if user_data:
         user = user_data[0]
@@ -174,6 +245,12 @@ async def process_show_command(message: types.Message):
 
 @dp.message_handler(commands=['delete'])
 async def process_delete_command(message: types.Message):
+    """
+    Обработка команды /delete.
+    Удалит данные пользователя из базы данных.
+
+    :param message: Сообщение от пользователя.
+    """
     user = message.from_user
     user_data = await delete_user(user=user)
     if user_data.deleted_count == 1:
@@ -189,6 +266,13 @@ async def process_delete_command(message: types.Message):
 
 @dp.message_handler()
 async def process_unknown_command(message: types.Message):
+    """
+    Обработка любых неизвестных команд.
+    Отправляет пользователю сообщение с просьбой выбрать
+    команду из списка и удалит сообщение.
+
+    :param message: Сообщение от пользователя.
+    """
     await message.answer('Выберите команду из списка')
     await message.delete()
 
