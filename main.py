@@ -133,7 +133,7 @@ async def process_cancel(message: types.Message, state: FSMContext):
 
 @dp.message_handler(lambda message: '/' not in message.text or not all(
     part.isdigit() for part in message.text.split('/')),
-                    state=AddUsers.record_number)
+    state=AddUsers.record_number)
 async def process_invalid_number(message: types.Message):
     """
     Обработка некорректно введенного номера заявки.
@@ -240,7 +240,7 @@ async def process_show_command(message: types.Message):
 
         return
     await bot.send_message(message.from_user.id,
-                           text='Для получения данных нужно зарегистрироваться')
+                           text='Для получения данных зарегистрируйтесь')
 
 
 @dp.message_handler(commands=['delete'])
