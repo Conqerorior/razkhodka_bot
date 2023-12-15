@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+from typing import Any
 
 from aiogram import Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
@@ -35,11 +36,12 @@ class AddUsers(StatesGroup):
     pin_number = State()
 
 
-async def on_startup(_):
+async def on_startup(_: Any) -> None:
+    """Запуск бота."""
     logging.warning('Бот начал свою работу')
     await start_mongodb()
-    logging.warning('Запуск Планировщика')
-    await asyncio.create_task(scheduler())
+    schedule_task = asyncio.create_task(scheduler())
+    logging.warning(f'Запуск Планировщика {schedule_task.get_name()}')
 
 
 async def scheduler_auto_status():
@@ -63,6 +65,7 @@ async def scheduler_auto_status():
 
 
 async def scheduler():
+    logging.warning('Присылаю статус')
     aioschedule.every(1).days.at('12:00').do(scheduler_auto_status)
     while True:
         await aioschedule.run_pending()
@@ -71,6 +74,7 @@ async def scheduler():
 
 @dp.message_handler(commands=['start', 'help'])
 async def process_help_command(message: types.Message):
+    """Обработка команды /start."""
     await bot.send_message(
         message.from_user.id,
         'Описание возможностей бота',
