@@ -3,6 +3,7 @@ import logging
 import os
 from typing import Any
 
+import aioschedule
 from aiogram import Bot, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import Dispatcher, FSMContext
@@ -11,16 +12,9 @@ from aiogram.utils import executor
 from dotenv import load_dotenv
 
 from keyboards import keyboards_client
-from MongoData import (create_user,
-                       get_all_users,
-                       get_user,
-                       start_mongodb,
-                       show_user,
-                       delete_user)
-
+from MongoData import (create_user, delete_user, get_all_users, get_user,
+                       show_user, start_mongodb)
 from parser_status import get_data_parser
-
-import aioschedule
 
 load_dotenv()
 
@@ -37,7 +31,12 @@ class AddUsers(StatesGroup):
 
 
 async def on_startup(_: Any) -> None:
-    """Запуск бота."""
+    """
+    Запуск бота.
+    Schedule_task запускает функцию scheduler
+    функция scheduler будет продолжать выполняться в
+    отдельном событийном цикле, пока не будет завершена.
+    """
     logging.warning('Бот начал свою работу')
     await start_mongodb()
     schedule_task = asyncio.create_task(scheduler())
@@ -65,7 +64,6 @@ async def scheduler_auto_status():
 
 
 async def scheduler():
-    logging.warning('Присылаю статус')
     aioschedule.every(1).days.at('12:00').do(scheduler_auto_status)
     while True:
         await aioschedule.run_pending()
@@ -77,7 +75,7 @@ async def process_help_command(message: types.Message):
     """Обработка команды /start."""
     await bot.send_message(
         message.from_user.id,
-        'Описание возможностей бота',
+        text='Описание возможностей бота',
         reply_markup=keyboards_client)
 
 
