@@ -1,4 +1,3 @@
-![Логотип](https://github.com/Conqerorior/razkhodka_bot/blob/main/razhodka-1.jpg)
 <p align="center">
   <img src="https://github.com/Conqerorior/razkhodka_bot/blob/main/razhodka-1.jpg" />
 </p>
