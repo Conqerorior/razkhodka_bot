@@ -1,3 +1,4 @@
+![Логотип](\razkhodka_bot\razhodka.jpg)
 <div id="header" align="center">
   <h1>Razkhodka Bot</h1>
   <img src="https://img.shields.io/badge/Python-3.9-F8F8FF?style=for-the-badge&logo=python&logoColor=20B2AA">
