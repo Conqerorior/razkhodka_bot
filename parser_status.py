@@ -4,6 +4,8 @@ import logging
 import httpx
 from bs4 import BeautifulSoup
 
+from message import message_status
+
 
 async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
     """
@@ -75,8 +77,14 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
 
             return data_answer
 
+        rus_answer = ''.join(parser_answer.text.strip().split('\n')[1:])
+
+        parser_answer = parser_answer.text.strip()
+
+        status = rus_answer if rus_answer else parser_answer
+
         data_answer = {
-            'answer': parser_answer.text.strip(),
+            'answer': message_status.get(status, status),
             'time_answer': today
         }
 
