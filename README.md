@@ -1,4 +1,4 @@
-![Логотип](https://github.com/Conqerorior/razkhodka_bot/blob/main/razhodka.jpg?width=10&height=20)
+![Логотип](https://github.com/Conqerorior/razkhodka_bot/blob/main/razhodka-1.jpg?width=10&height=20)
 
 <div id="header" align="center">
   <h1>Razkhodka Bot</h1>
