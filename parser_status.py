@@ -26,20 +26,29 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
                           '(KHTML, like Gecko) '
                           'Chrome/29.0.1547.0 Safari/537.36'}
 
+        today = datetime.datetime.today().strftime(
+            '%H:%M%n%d\\.%m\\.%Y' + 'г\\.')
+
+        data_answer = {
+            'answer': 'Ошибка обработки сервера',
+            'time_answer': today
+        }
+
         response = await client.get(url='https://publicbg.mjs.bg/BgInfo/',
                                     headers=headers)
+
         if response.status_code != 200:
             logging.critical(f'Ошибка в пути GET response:\n{response}')
-            data_answer = {
-                'answer': 'Ошибка обработки сервера',
-                'time_answer': datetime.datetime.today().strftime(
-                    '%H:%M%n%d\\.%m\\.%Y' + 'г\\.')
-            }
 
             return data_answer
 
-        soup = BeautifulSoup(response.text, 'lxml')
-        token = soup.find('form').find('input').get('value')
+        try:
+            soup = BeautifulSoup(response.text, 'lxml')
+            token = soup.find('form').find('input').get('value')
+        except AttributeError:
+            logging.critical('Ошибка в получении ТОКЕНА')
+
+            return data_answer
 
         data = {
             '__RequestVerificationToken': token,
@@ -52,11 +61,19 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
             headers=headers,
             data=data)
 
+        if result.status_code != 200:
+            logging.critical(f'Ошибка при POST запросе result:\n{result}')
+
+            return data_answer
+
         answer = BeautifulSoup(result.text, 'lxml')
         parser_answer = answer.find(
-            name='div', class_='validation-summary-errors text-danger')
-        today = datetime.datetime.today().strftime(
-            '%H:%M%n%d\\.%m\\.%Y' + 'г\\.')
+                name='div', class_='validation-summary-errors text-danger')
+
+        if parser_answer is None:
+            logging.critical('Ошибка при получении ответа parser_answer')
+
+            return data_answer
 
         data_answer = {
             'answer': parser_answer.text.strip(),
