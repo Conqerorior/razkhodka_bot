@@ -1,5 +1,7 @@
-![Логотип](https://github.com/Conqerorior/razkhodka_bot/blob/main/razhodka-1.jpg?width=10&height=20)
-
+![Логотип](https://github.com/Conqerorior/razkhodka_bot/blob/main/razhodka-1.jpg)
+<p align="center">
+  <img src="https://github.com/Conqerorior/razkhodka_bot/blob/main/razhodka-1.jpg" />
+</p>
 <div id="header" align="center">
   <h1>Razkhodka Bot</h1>
   <img src="https://img.shields.io/badge/Python-3.9-F8F8FF?style=for-the-badge&logo=python&logoColor=20B2AA">
@@ -38,13 +40,13 @@
 
 * Клонируйте репозиторий.
 ```bash
-   git clone <название репозитория>
+git clone <название репозитория>
 ```
 
 * Установите и активируйте виртуальное окружение Для Windows:
 ```bash
-   python -m venv venv
-   source venv/Scripts/activate
+python -m venv venv
+source venv/Scripts/activate
 ```
 
 * Для Mac OS и Linux:
@@ -68,7 +70,7 @@ pip install requirements.txt
    ``` 
 
 
-* Запустите бот:
+* Запустите бота:
   * **python main.py**
 
 ## Чтобы использовать бота, выполните следующие действия:
