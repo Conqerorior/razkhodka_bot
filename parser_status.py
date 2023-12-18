@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import httpx
 from bs4 import BeautifulSoup
@@ -27,6 +28,15 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
 
         response = await client.get(url='https://publicbg.mjs.bg/BgInfo/',
                                     headers=headers)
+        if response.status_code != 200:
+            logging.critical(f'Ошибка в пути GET response:\n{response}')
+            data_answer = {
+                'answer': 'Ошибка обработки сервера',
+                'time_answer': datetime.datetime.today().strftime(
+                    '%H:%M%n%d\\.%m\\.%Y' + 'г\\.')
+            }
+
+            return data_answer
 
         soup = BeautifulSoup(response.text, 'lxml')
         token = soup.find('form').find('input').get('value')
