@@ -65,7 +65,7 @@ pip install requirements.txt
 * Создайте файл **.env** и введите в него следующие переменные:
     ```
     BOT_TOKEN=YOUR_BOT_TOKEN
-    MONGO_URI=mongodb://localhost:27017/
+    MONGODB=mongodb://localhost:27017/
    ``` 
 
 
