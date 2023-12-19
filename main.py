@@ -83,12 +83,21 @@ async def scheduler():
         await asyncio.sleep(1)
 
 
-@dp.message_handler(commands=['start', 'help'])
+@dp.message_handler(commands=['start'])
 async def process_help_command(message: types.Message):
     """Обработка команды /start."""
     await bot.send_message(
         message.from_user.id,
         text=message_text.message_start['start'],
+        reply_markup=keyboards_client)
+
+
+@dp.message_handler(commands=['help'])
+async def process_help_command(message: types.Message):
+    """Обработка команды /help."""
+    await bot.send_message(
+        message.from_user.id,
+        text=message_text.message_help['help'],
         reply_markup=keyboards_client)
 
 
