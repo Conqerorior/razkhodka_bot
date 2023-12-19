@@ -4,7 +4,7 @@ import logging
 import httpx
 from bs4 import BeautifulSoup
 
-from message import message_status
+from message_text import message_status
 
 
 async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:

@@ -11,6 +11,7 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
 from dotenv import load_dotenv
 
+import message_text
 from keyboards import keyboards_client
 from MongoData import (create_user, delete_user, get_all_users, get_user,
                        show_user, start_mongodb)
@@ -87,7 +88,7 @@ async def process_help_command(message: types.Message):
     """Обработка команды /start."""
     await bot.send_message(
         message.from_user.id,
-        text='Описание возможностей бота',
+        text=message_text.message_start['start'],
         reply_markup=keyboards_client)
 
 
