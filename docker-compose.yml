@@ -1,6 +1,6 @@
 services:
   bot:
-    image: razkhodka_bot
+    image: ozonti/razkhodka_bot
     env_file:
       - ./.env
     depends_on:

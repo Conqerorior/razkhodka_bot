@@ -37,10 +37,19 @@ async def on_startup(_: Any) -> None:
     Инициализирует подключение к базе данных MongoDB,
     и запускает планировщик задач.
     """
+    await bot.set_webhook(os.getenv('WEBHOOK_URL'))
     logging.warning('Бот начал свою работу')
     await start_mongodb()
     schedule_task = asyncio.create_task(scheduler())
     logging.warning(f'Запуск Планировщика {schedule_task.get_name()}')
+
+
+async def on_shutdown(_: Any) -> None:
+    """
+    Удаление вебхука.
+    Функция для удаления вебхука, когда бот завершает работу.
+    """
+    await bot.delete_webhook()
 
 
 async def scheduler_auto_status():
@@ -288,4 +297,12 @@ async def process_unknown_command(message: types.Message):
 
 
 if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+    executor.start_webhook(
+        dispatcher=dp,
+        webhook_path='',
+        skip_updates=True,
+        on_startup=on_startup,
+        on_shutdown=on_shutdown,
+        hoost="0.0.0.0",
+        port=int(os.getenv('PORT', 5000))
+    )
