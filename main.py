@@ -13,8 +13,14 @@ from dotenv import load_dotenv
 
 import message_text
 from keyboards import keyboards_client
-from MongoData import (create_user, delete_user, get_all_users, get_user,
-                       show_user, start_mongodb)
+from MongoData import (
+    create_user,
+    delete_user,
+    get_all_users,
+    get_user,
+    show_user,
+    start_mongodb,
+)
 from parser_status import get_data_parser
 
 load_dotenv()
@@ -63,17 +69,18 @@ async def scheduler_auto_status():
     users = await get_all_users()
     if users:
         for user in users:
-            data = await get_data_parser(
-                req_num=user['reqNum'], pin=user['pin'])
+            data = await get_data_parser(req_num=user['reqNum'], pin=user['pin'])
 
-            await bot.send_message(user['user_id'],
-                                   text=f'🇧🇬Добрый день, '
-                                        f'*{user["username"]}*\\!\n'
-                                        f'Статус заявки '
-                                        f'под номером: {user["reqNum"]}'
-                                        f'\n\n`{data["answer"].upper()}`\n\n'
-                                        f'{data["time_answer"]}📅',
-                                   parse_mode="MarkdownV2")
+            await bot.send_message(
+                user['user_id'],
+                text=f'🇧🇬Добрый день, '
+                f'*{user["username"]}*\\!\n'
+                f'Статус заявки '
+                f'под номером: {user["reqNum"]}'
+                f'\n\n`{data["answer"].upper()}`\n\n'
+                f'{data["time_answer"]}📅',
+                parse_mode="MarkdownV2",
+            )
 
         return
     logging.warning('В Базе Данных нет пользователей')
@@ -98,7 +105,8 @@ async def process_help_command(message: types.Message):
     await bot.send_message(
         message.from_user.id,
         text=message_text.message_start['start'],
-        reply_markup=keyboards_client)
+        reply_markup=keyboards_client,
+    )
 
 
 @dp.message_handler(commands=['help'])
@@ -107,7 +115,8 @@ async def process_help_command(message: types.Message):
     await bot.send_message(
         message.from_user.id,
         text=message_text.message_help['help'],
-        reply_markup=keyboards_client)
+        reply_markup=keyboards_client,
+    )
 
 
 @dp.message_handler(commands=['add'], state=None)
@@ -127,9 +136,11 @@ async def process_add_command(message: types.Message):
         return
 
     await AddUsers.record_number.set()
-    await message.answer('Введите номер входящей заявки указывается '
-                         'в формате «номер/год». Пример: «123/2016».\n'
-                         '\nДля отмены введите /cancel')
+    await message.answer(
+        'Введите номер входящей заявки указывается '
+        'в формате «номер/год». Пример: «123/2016».\n'
+        '\nДля отмены введите /cancel'
+    )
 
 
 @dp.message_handler(commands=['cancel'], state='*')
@@ -150,9 +161,11 @@ async def process_cancel(message: types.Message, state: FSMContext):
     await message.reply('ОК')
 
 
-@dp.message_handler(lambda message: '/' not in message.text or not all(
-    part.isdigit() for part in message.text.split('/')),
-    state=AddUsers.record_number)
+@dp.message_handler(
+    lambda message: '/' not in message.text
+    or not all(part.isdigit() for part in message.text.split('/')),
+    state=AddUsers.record_number,
+)
 async def process_invalid_number(message: types.Message):
     """
     Обработка некорректно введенного номера заявки.
@@ -176,14 +189,17 @@ async def process_add_number(message: types.Message, state: FSMContext):
         data['reqNum'] = message.text
 
     await AddUsers.next()
-    await message.answer('ПИН-код вводится в документ, который вы получили'
-                         ' при подаче заявления на стойке в Дирекции.\n'
-                         '\nДля отмены введите /cancel')
+    await message.answer(
+        'ПИН-код вводится в документ, который вы получили'
+        ' при подаче заявления на стойке в Дирекции.\n'
+        '\nДля отмены введите /cancel'
+    )
     await AddUsers.pin_number.set()
 
 
-@dp.message_handler(lambda message: not message.text.isdigit(),
-                    state=AddUsers.pin_number)
+@dp.message_handler(
+    lambda message: not message.text.isdigit(), state=AddUsers.pin_number
+)
 async def process_invalid_pin(message: types.Message):
     """
     Обработка некорректно введенного ПИН-кода.
@@ -224,18 +240,21 @@ async def process_check_command(message: types.Message):
     """
     user = await get_user(message.from_user)
     if not user:
-        await bot.send_message(message.from_user.id,
-                               text='Для получения данных '
-                                    'пожалуйста введите данные')
+        await bot.send_message(
+            message.from_user.id,
+            text='Для получения данных ' 'пожалуйста введите данные',
+        )
         return
 
     data = await get_data_parser(req_num=user['reqNum'], pin=user['pin'])
-    await bot.send_message(message.from_user.id,
-                           text=f'🇧🇬Добрый день, *{user["username"]}*\\!\n'
-                                f'Статус заявки под номером: {user["reqNum"]}'
-                                f'\n\n`{data["answer"].upper()}`\n\n'
-                                f'{data["time_answer"]}',
-                           parse_mode="MarkdownV2")
+    await bot.send_message(
+        message.from_user.id,
+        text=f'🇧🇬Добрый день, *{user["username"]}*\\!\n'
+        f'Статус заявки под номером: {user["reqNum"]}'
+        f'\n\n`{data["answer"].upper()}`\n\n'
+        f'{data["time_answer"]}',
+        parse_mode="MarkdownV2",
+    )
 
 
 @dp.message_handler(commands=['show'])
@@ -250,16 +269,18 @@ async def process_show_command(message: types.Message):
     user_data = await show_user(user=message.from_user)
     if user_data:
         user = user_data[0]
-        await bot.send_message(message.from_user.id,
-                               text=f'Ваш ID: {user["user_id"]}\n'
-                                    f'Username: {user["username"]}\n'
-                                    f'Номер Заявления: {user["reqNum"]}\n'
-                                    f'Пин-Код: {user["pin"]}'
-                               )
+        await bot.send_message(
+            message.from_user.id,
+            text=f'Ваш ID: {user["user_id"]}\n'
+            f'Username: {user["username"]}\n'
+            f'Номер Заявления: {user["reqNum"]}\n'
+            f'Пин-Код: {user["pin"]}',
+        )
 
         return
-    await bot.send_message(message.from_user.id,
-                           text='Для получения данных зарегистрируйтесь')
+    await bot.send_message(
+        message.from_user.id, text='Для получения данных зарегистрируйтесь'
+    )
 
 
 @dp.message_handler(commands=['delete'])
@@ -273,14 +294,15 @@ async def process_delete_command(message: types.Message):
     user = message.from_user
     user_data = await delete_user(user=user)
     if user_data.deleted_count == 1:
-        await bot.send_message(message.from_user.id,
-                               text=f'Пользователь '
-                                    f'{user.username} успешно удален')
+        await bot.send_message(
+            message.from_user.id,
+            text=f'Пользователь ' f'{user.username} успешно удален',
+        )
 
         return
-    await bot.send_message(message.from_user.id,
-                           text=f'Пользователь '
-                                f'{user.username} не найден')
+    await bot.send_message(
+        message.from_user.id, text=f'Пользователь ' f'{user.username} не найден'
+    )
 
 
 @dp.message_handler()
@@ -304,5 +326,5 @@ if __name__ == '__main__':
         on_startup=on_startup,
         on_shutdown=on_shutdown,
         hoost="0.0.0.0",
-        port=int(os.getenv('PORT', 5000))
+        port=int(os.getenv('PORT', 5000)),
     )
