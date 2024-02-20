@@ -23,21 +23,19 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
         headers = {
             'Accept': 'text/html',
             'User-Agent': 'Mozilla/5.0'
-                          '(Windows NT 6.1)'
-                          'AppleWebKit/537.36'
-                          '(KHTML, like Gecko) '
-                          'Chrome/29.0.1547.0 Safari/537.36'}
-
-        today = datetime.datetime.today().strftime(
-            '%H:%M%n%d\\.%m\\.%Y' + 'г\\.')
-
-        data_answer = {
-            'answer': 'Ошибка обработки сервера',
-            'time_answer': today
+            '(Windows NT 6.1)'
+            'AppleWebKit/537.36'
+            '(KHTML, like Gecko) '
+            'Chrome/29.0.1547.0 Safari/537.36',
         }
 
-        response = await client.get(url='https://publicbg.mjs.bg/BgInfo/',
-                                    headers=headers)
+        today = datetime.datetime.today().strftime('%H:%M%n%d\\.%m\\.%Y' + 'г\\.')
+
+        data_answer = {'answer': 'Ошибка обработки сервера', 'time_answer': today}
+
+        response = await client.get(
+            url='https://publicbg.mjs.bg/BgInfo/', headers=headers
+        )
 
         if response.status_code != 200:
             logging.critical(f'Ошибка в пути GET response:\n{response}')
@@ -52,16 +50,11 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
 
             return data_answer
 
-        data = {
-            '__RequestVerificationToken': token,
-            'reqNum': req_num,
-            'pin': pin
-        }
+        data = {'__RequestVerificationToken': token, 'reqNum': req_num, 'pin': pin}
 
         result = await client.post(
-            url='https://publicbg.mjs.bg/BgInfo/Home/Enroll',
-            headers=headers,
-            data=data)
+            url='https://publicbg.mjs.bg/BgInfo/Home/Enroll', headers=headers, data=data
+        )
 
         if result.status_code != 200:
             logging.critical(f'Ошибка при POST запросе result:\n{result}')
@@ -70,7 +63,8 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
 
         answer = BeautifulSoup(result.text, 'lxml')
         parser_answer = answer.find(
-                name='div', class_='validation-summary-errors text-danger')
+            name='div', class_='validation-summary-errors text-danger'
+        )
 
         if parser_answer is None:
             logging.critical('Ошибка при получении ответа parser_answer')
@@ -85,7 +79,7 @@ async def get_data_parser(req_num: str, pin: str) -> dict[str, str]:
 
         data_answer = {
             'answer': message_status.get(status, status),
-            'time_answer': today
+            'time_answer': today,
         }
 
         return data_answer
